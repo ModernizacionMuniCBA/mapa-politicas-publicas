@@ -1,14 +1,22 @@
 #mainCont {
-    border: 1px solid #000;
-    /*display: grid;
-    grid-template-columns: 0.5fr 1fr;*/
-    min-height: 500px;
+    /*border: 1px solid #000;*/
+    display: grid;
+    grid-template-columns: 0.5fr 1fr;
+    min-height: 600px;
 }
 
 /* Corresponde al contenedor del mapa */
+#mapCont {
+    /*width: 37%;*/
+    /*min-height: 600px;*/
+    /*display: inline-block;*/
+    position: relative;
+}
+
+/* Corresponde al canvas del mapa */
 .map {
-    height: 500px;
-    width: 37%;
+    height: 600px;
+    /*border: 1px solid #000;*/
     position: fixed;
 }
 
@@ -20,9 +28,10 @@
 #infoCont {
     padding: 0 15px;
     border-left: 1px solid #000;
-    width: 60%;
-    position: absolute;
+    /*width: 60%;
+    display: inline-block;*/
     right: 0;
+    
 }
 
 #tooltip {
