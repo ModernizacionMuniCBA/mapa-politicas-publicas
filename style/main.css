@@ -1,0 +1,86 @@
+#mainCont {
+    border: 1px solid #000;
+    /*display: grid;
+    grid-template-columns: 0.5fr 1fr;*/
+    min-height: 500px;
+}
+
+/* Corresponde al contenedor del mapa */
+.map {
+    height: 500px;
+    width: 37%;
+    position: fixed;
+}
+
+.ul_vnostyle {
+    list-style-type: none;
+    padding: 0;
+}
+
+#infoCont {
+    padding: 0 15px;
+    border-left: 1px solid #000;
+    width: 60%;
+    position: absolute;
+    right: 0;
+}
+
+#tooltip {
+    border: 1px solid #000;
+    background-color: #000;
+    color: #fff;
+    padding: 10px;
+    position: absolute;
+    border-radius: 5px;
+    box-shadow: 0 3px 6px #000;
+    display: none;
+}
+
+#ic_municipios > ul li {
+    margin: 10px 0;
+}
+
+#ic_municipios > ul li > div:first-child {
+    margin: 10px 0;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.muniButton {
+    border: 1px solid;
+    /*border-bottom: none;*/
+    display: block;
+    padding: 10px;
+    margin: 10px 0 0;
+    cursor: pointer;
+}
+
+/* Corresponde al contenedor principal de consignas. */
+.consignaCont {
+    border: 1px solid #000;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.consignaCont h2 {
+    margin: 0 0 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #000;
+}
+
+.politicasList {
+    border: 1px solid #000;
+    list-style: none;
+}
+
+/* Corresponde  */
+.politica_button {
+    border: 1px solid #000;
+    padding: 10px;
+    cursor: pointer;
+    display: block;
+}
+
+.politica_button:hover {
+    background-color: #ccc;
+}
