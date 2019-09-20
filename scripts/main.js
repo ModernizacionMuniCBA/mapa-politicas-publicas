@@ -8,6 +8,7 @@ var _infoDlg = null;
 /** Representa el contenedor con las preguntas correspondiente al municipio. */
 var _municipiosDlg = null;
 
+/* == Imports de OpenLayer == */
 var Feature = ol.Feature;
 var Map = ol.Map;
 var View = ol.View;
@@ -20,6 +21,7 @@ var {Circle2, Fill, Stroke, Style} = ol.style;
 var CircleStyle = Circle2;
 var {OSM} = ol.source;
 var VectorSource = ol.source.Vector;
+/* ========================== */
 
 $(document).ready(function() {
     initContainers();
@@ -104,13 +106,19 @@ function showPoliticasRespuestas(curEl) {
     }
 }
 
+
 function getMunicipioData_byID(index, provData) {
     return provData.Data[index] ? provData.Data[index] : null;
 }
 
+/**
+ * Muestra la información de un municipio.
+ * @param curEl Elemento HTML disparador del evento.
+ * @param provID ID de la provincia.
+ * @param muniID ID del municipio
+ */
 function showMunicipiosData(curEl, provID, muniID) {
     let provData = getProvinciaData_byID(provID)
-    let preguntas = _localData.preguntas;
 
     // Nos aseguramos que haya información para la provincia seleccionada.
     if (provData) {
@@ -118,39 +126,49 @@ function showMunicipiosData(curEl, provID, muniID) {
         let muniData = getMunicipioData_byID(muniID, provData);
         
         if (muniData) {
-            let respData = muniData.Respuestas;
-            let htmlCode = "";
-
-            // Recorremos todas las consignas / preguntas.
-            for (let i = 0; i < preguntas.length; i++) {
-                let consigna = preguntas[i];
-                let consignaDesc = consigna.consigna;
-
-                htmlCode += "<div class='consignaCont' data-cid='" + i + "'>";
-                htmlCode += "<h2>Consigna nº" + (i+1) + "</h2>";
-                htmlCode += "<p>" + consignaDesc + "</p>";
-
-                // Si nos encontramos en la primer consigna, mostraremos el listado de todas
-                // las politicas.
-                if (i === 0) {
-                    htmlCode += "<ul class='politicasList'>";
-                    // recorremos todas las respuestas del municipio.
-                    for (let j = 0; j < respData[0].respuestas.length; j++) {
-                        //let consignaCont = $(".consignaCont[data-cid='" + j + "']");
-                        htmlCode += "<li><span class='politica_button' data-pid='" + j + "'>";
-                        htmlCode += respData[0].respuestas[j][0].texto;
-                        htmlCode += "</span></li>";
-                    }
-                    htmlCode += "</ul>";
-                }
-                htmlCode += "</div>";
-            }
+            let htmlCode = generateHTMLCode_MunicipiosData(muniData);
 
             $(htmlCode).insertAfter(curEl);
         }
 
         console.log(muniData);
     }
+}
+
+function generateHTMLCode_MunicipiosData(muniData) {
+    let preguntas = _localData.preguntas;
+    let htmlCode = "";
+    let respData = muniData.Respuestas;
+
+    // Recorremos todas las consignas / preguntas.
+    for (let i = 0; i < preguntas.length; i++) {
+        let consigna = preguntas[i];
+        let consignaDesc = consigna.consigna;
+
+        htmlCode += "<div class='consignaCont' data-cid='" + i + "'>";
+        htmlCode += "<h2>Consigna nº" + (i+1) + "</h2>";
+        htmlCode += "<p>" + consignaDesc + "</p>";
+
+        // Si nos encontramos en la primer consigna, mostraremos el listado de todas
+        // las politicas.
+
+        // La primer consigna es generalmente la que contiene a su vez
+        // sub-items, por lo que debemos representarla de manera diferenciada.
+        if (i === 0) {
+            htmlCode += "<ul class='politicasList'>";
+            // recorremos todas las respuestas del municipio.
+            for (let j = 0; j < respData[0].respuestas.length; j++) {
+                //let consignaCont = $(".consignaCont[data-cid='" + j + "']");
+                htmlCode += "<li><span class='politica_button' data-pid='" + j + "'>";
+                htmlCode += respData[0].respuestas[j][0].texto;
+                htmlCode += "</span></li>";
+            }
+            htmlCode += "</ul>";
+        }
+        htmlCode += "</div>";
+    }
+
+    return htmlCode;
 }
 
 function initMap() {
