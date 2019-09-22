@@ -36,7 +36,6 @@ $(document).ready(function() {
         let provID = parseInt(curEl.attr("data-pid"), 10);
         let muniID = parseInt(curEl.attr("data-id"), 10);
         
-        //displayConsignas(curEl);
         showMunicipiosData(curEl, provID, muniID);
     }).on("click", ".politica_button", function() {
         let curEl = $(this);
@@ -47,6 +46,9 @@ $(document).ready(function() {
 
 function showPoliticasRespuestas(curEl) {
     let politicaID = parseInt(curEl.attr("data-pid"), 10);
+
+    if (toggleContainer_RespuestasPoliticas(curEl, politicaID)) return;
+
     let provID = parseInt(curEl.parents("li").find(".muniButton").attr("data-pid"), 10);
     let muniID = parseInt(curEl.parents("li").find(".muniButton").attr("data-id"), 10);
     let provData = getProvinciaData_byID(provID);
@@ -61,7 +63,7 @@ function showPoliticasRespuestas(curEl) {
             console.log(preguntas);
 
             if (respData) {
-                let htmlCode = "<ul>";
+                let htmlCode = "<div class='p_infoCont' data-pid='" + politicaID + "'><ul class='ul_vnostyle'>";
                 // recorremos todas las preguntas
                 
                 for (let i = 0; i < preguntas.length; i++) {
@@ -73,20 +75,23 @@ function showPoliticasRespuestas(curEl) {
                         // recorremos todas las preguntas de la consigna actual
                         for (let j = 0; j < preguntas.length; j++) {
                             htmlCode += "<li>";
-                            htmlCode += "<div>" + preguntas[j].nombre + "</div>";
+                            htmlCode += "<div class='p_ic_pName'>" + preguntas[j].nombre + "</div>";
                             
                             // recorremos las respuestas de la pregunta actual.
                             for (let k = 0; k < respData.length; k++) {
                                 //htmlCode += "<span>" + preguntas[j].nombre + "</span>";
-                                if (respData[k].pregID === j) htmlCode += "<div>" + respData[k].texto + "</div>";
+                                if (respData[k].pregID === j) htmlCode += "<div class='p_ic_pTxt'>" + respData[k].texto + "</div>";
                             }
 
                             htmlCode += "</li>";
                         }
                     }
+                    else {
+
+                    }
                 }
 
-                htmlCode += "</ul>";
+                htmlCode += "</ul></div>";
 
                 $(htmlCode).insertAfter(curEl);
             }
@@ -120,13 +125,15 @@ function getMunicipioData_byID(index, provData) {
 function showMunicipiosData(curEl, provID, muniID) {
     let provData = getProvinciaData_byID(provID)
 
+    if (toggleContainer_RespuestasMunicipios(curEl, provID, muniID)) return;
+
     // Nos aseguramos que haya información para la provincia seleccionada.
     if (provData) {
         // Obtenemos información del municipio seleccionado.
         let muniData = getMunicipioData_byID(muniID, provData);
         
         if (muniData) {
-            let htmlCode = generateHTMLCode_MunicipiosData(muniData);
+            let htmlCode = generateHTMLCode_MunicipiosData(muniData, provID, muniID);
 
             $(htmlCode).insertAfter(curEl);
         }
@@ -135,11 +142,12 @@ function showMunicipiosData(curEl, provID, muniID) {
     }
 }
 
-function generateHTMLCode_MunicipiosData(muniData) {
+function generateHTMLCode_MunicipiosData(muniData, provID, muniID) {
     let preguntas = _localData.preguntas;
     let htmlCode = "";
     let respData = muniData.Respuestas;
 
+    htmlCode += "<div data-pid='" + provID + "' data-id='" + muniID + "'>";
     // Recorremos todas las consignas / preguntas.
     for (let i = 0; i < preguntas.length; i++) {
         let consigna = preguntas[i];
@@ -154,20 +162,25 @@ function generateHTMLCode_MunicipiosData(muniData) {
 
         // La primer consigna es generalmente la que contiene a su vez
         // sub-items, por lo que debemos representarla de manera diferenciada.
+        // De momento está hard-coded pero en un futuro puede implementarse
+        // una propiedad en "data.json" para diferenciar consignas con sub-consignas.
         if (i === 0) {
             htmlCode += "<ul class='politicasList'>";
             // recorremos todas las respuestas del municipio.
             for (let j = 0; j < respData[0].respuestas.length; j++) {
-                //let consignaCont = $(".consignaCont[data-cid='" + j + "']");
                 htmlCode += "<li><span class='politica_button' data-pid='" + j + "'>";
                 htmlCode += respData[0].respuestas[j][0].texto;
                 htmlCode += "</span></li>";
             }
             htmlCode += "</ul>";
         }
+        else {
+            htmlCode += "<p>" + respData[i].respConsigna + "</p>";
+        }
         htmlCode += "</div>";
     }
 
+    htmlCode += "</div>";
     return htmlCode;
 }
 
@@ -226,7 +239,6 @@ function loadData() {
     $.getJSON("./data/data.json", function(json) {
         if (json) {
             _localData = json; 
-            //displayConsignas();
         }
     });
 }
@@ -275,17 +287,6 @@ function setTileStyle(provSource, map) {
  * @param {*} map Instancia del mapa al cual se van a registrar los eventos.
  */
 function registerMapEvents(map, provSource, provLayer) {
-    /*map.on("rendercomplete", (event) => {
-        var features = map.getFeaturesAtPixel(event.pixel);
-        if (features) {
-            setTileStyle(provSource, map, provLayer);
-
-            var properties = features[0].getProperties();
-            //features[0].setProperties(JSON.stringify("HOLA SI"), true);
-            console.log(properties);
-        }
-    });*/
-
     // Registramos por UNICA VEZ (map.ONCE) el evento que se dispara cuando
     // se terminan de renderizar los tiles que se encuentran dentro del viewport.
     map.once("rendercomplete", (event) => {
@@ -311,8 +312,6 @@ function registerMapEvents(map, provSource, provLayer) {
         changeCursorOnMapHover(map, evt);
 
         displayTooltipInfo(map, map.getEventPixel(evt.originalEvent));
-
-        //displayTileInfo(map, map.getEventPixel(evt.originalEvent));
     });
 
     map.on("click", function(evt) {
@@ -379,9 +378,6 @@ function displayTileInfo(map, pixel) {
     else _tooltipDlg.hide();
 }
 
-function changeCursorOnMapHover(map, evt) {
-    map.getTargetElement().style.cursor = map.hasFeatureAtPixel(map.getEventPixel(evt.originalEvent)) ? 'pointer' : '';
-}
 
 /**
  * Muestra todas las consignas, preguntas y respuestas de un municipio.
@@ -467,6 +463,33 @@ function updateDisplay_municipios(provData) {
     _municipiosDlg.html(htmlCode);
 }
 
-function showPreguntasData(pregData) {
-    let curPreg = null;
+function toggleContainer_RespuestasPoliticas(senderEl, politicaID) {
+    // si existe un elemento <div> con el atributo "data-pid" entendemos
+    // que los datos ya se anexaron al DOM, por lo tanto en lugar de volver a anexar
+    // mostramos / ocultamos el contenedor.
+    
+    // representa el contenedor de respuestas
+    let respContainer = senderEl.parent("li").find("div[data-pid='" + politicaID + "']");
+    
+    return toggleContainerVisibility(respContainer);
+}
+
+function toggleContainer_RespuestasMunicipios(senderEl, provID, muniID) {
+    let respContainer = senderEl.parent("li").find("div[data-pid='" + provID + "'][data-id='" + muniID + "']");
+
+    return toggleContainerVisibility(respContainer);
+}
+
+function toggleContainerVisibility(element) {
+    // el contenedor existe
+    if (element.length != 0) {
+        if (element.is(":visible")) element.fadeOut(150);
+        else element.fadeIn(150);
+        return true;
+    }
+    return false;
+}
+
+function changeCursorOnMapHover(map, evt) {
+    map.getTargetElement().style.cursor = map.hasFeatureAtPixel(map.getEventPixel(evt.originalEvent)) ? 'pointer' : '';
 }
