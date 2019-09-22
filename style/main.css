@@ -19,17 +19,14 @@ body {
 
 /* Corresponde al contenedor del mapa */
 #mapCont {
-    /*width: 37%;*/
-    /*min-height: 600px;*/
-    /*display: inline-block;*/
     position: relative;
 }
 
 /* Corresponde al canvas del mapa */
 .map {
     height: 600px;
-    /*border: 1px solid #000;*/
     position: fixed;
+    width: 430px;
 }
 
 .ul_vnostyle {
@@ -57,10 +54,7 @@ body {
     display: none;
 }
 
-#ic_municipios > ul li {
-    margin: 10px 0;
-}
-
+#ic_municipios > ul li { margin: 10px 0; }
 #ic_municipios > ul li:first-child { margin-top: 0px; }
 #ic_municipios > ul li:last-child { margin-bottom: 0px; }
 
@@ -83,14 +77,14 @@ body {
 .consignaCont {
     border: 1px solid #409059;
     background-color: #b7e0af;
-    padding: 10px;
+    padding: 10px 20px;
     margin-bottom: 10px;
 }
 
 .consignaCont h2 {
     margin: 0 0 10px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #000;
+    border-bottom: 1px solid #a4ca9c;
 }
 
 .politicasList {

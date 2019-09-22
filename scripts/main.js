@@ -155,7 +155,6 @@ function generateHTMLCode_MunicipiosData(muniData, provID, muniID) {
 
         htmlCode += "<div class='consignaCont' data-cid='" + i + "'>";
         htmlCode += "<h2>Consigna nº" + (i+1) + "</h2>";
-        htmlCode += "<p>" + consignaDesc + "</p>";
 
         // Si nos encontramos en la primer consigna, mostraremos el listado de todas
         // las politicas.
@@ -165,6 +164,7 @@ function generateHTMLCode_MunicipiosData(muniData, provID, muniID) {
         // De momento está hard-coded pero en un futuro puede implementarse
         // una propiedad en "data.json" para diferenciar consignas con sub-consignas.
         if (i === 0) {
+            htmlCode += "<p>" + consignaDesc + "</p>";
             htmlCode += "<ul class='politicasList'>";
             // recorremos todas las respuestas del municipio.
             for (let j = 0; j < respData[0].respuestas.length; j++) {
@@ -175,7 +175,8 @@ function generateHTMLCode_MunicipiosData(muniData, provID, muniID) {
             htmlCode += "</ul>";
         }
         else {
-            htmlCode += "<p>" + respData[i].respConsigna + "</p>";
+            htmlCode += "<div class='p_ic_pName'>" + consignaDesc + "</div>";
+            htmlCode += "<div class='p_ic_pTxt'>" + respData[i].respConsigna + "</div>";
         }
         htmlCode += "</div>";
     }
