@@ -1,3 +1,15 @@
+body {
+    margin: 0;
+}
+
+.title {
+    margin: 0;
+    text-align: center;
+    background-color: #009059;
+    padding: 10px;
+    color: #fff;
+}
+
 #mainCont {
     /*border: 1px solid #000;*/
     display: grid;
@@ -49,24 +61,28 @@
     margin: 10px 0;
 }
 
-#ic_municipios > ul li > div:first-child {
-    margin: 10px 0;
-    font-weight: bold;
-    font-size: 1.1em;
-}
+#ic_municipios > ul li:first-child { margin-top: 0px; }
+#ic_municipios > ul li:last-child { margin-bottom: 0px; }
 
 .muniButton {
-    border: 1px solid;
-    /*border-bottom: none;*/
+    border: 1px solid #409059;
+    background-color: #009059;
     display: block;
     padding: 10px;
     margin: 10px 0 0;
     cursor: pointer;
+    color: #fff;
+    transition: background-color linear 0.1s;
+}
+
+.muniButton:hover {
+    background-color: #00b36e; 
 }
 
 /* Corresponde al contenedor principal de consignas. */
 .consignaCont {
-    border: 1px solid #000;
+    border: 1px solid #409059;
+    background-color: #b7e0af;
     padding: 10px;
     margin-bottom: 10px;
 }
@@ -78,18 +94,41 @@
 }
 
 .politicasList {
-    border: 1px solid #000;
+    border: 1px solid #a4ca9c;
     list-style: none;
+    padding: 10px;
+    background-color: #f0fff6;
 }
 
 /* Corresponde  */
 .politica_button {
-    border: 1px solid #000;
+    border: 1px solid #409059;
     padding: 10px;
+    background-color: #409059;
     cursor: pointer;
     display: block;
+    color: #fff;
+    font-weight: bold;
+    user-select: none;
 }
 
 .politica_button:hover {
-    background-color: #ccc;
+    background-color: #4daf6c;
+}
+
+/* Corresponde al contenedor con la información de la política seleccionada */
+.p_infoCont {
+    border: 1px solid #409059;
+    background-color: #b7e0af;
+    padding: 10px;
+}
+
+.p_ic_pName {
+    margin: 0 0 10px;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.p_ic_pTxt {
+    font-size: 0.9em;
 }
