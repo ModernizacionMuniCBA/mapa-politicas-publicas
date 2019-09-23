@@ -169,7 +169,7 @@ function generateHTMLCode_MunicipiosData(muniData, provID, muniID) {
             // recorremos todas las respuestas del municipio.
             for (let j = 0; j < respData[0].respuestas.length; j++) {
                 htmlCode += "<li><span class='politica_button' data-pid='" + j + "'>";
-                htmlCode += respData[0].respuestas[j][0].texto;
+                htmlCode += (j + 1) + ". " + respData[0].respuestas[j][0].texto;
                 htmlCode += "</span></li>";
             }
             htmlCode += "</ul>";
