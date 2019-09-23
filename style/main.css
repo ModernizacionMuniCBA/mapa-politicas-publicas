@@ -27,11 +27,24 @@ body {
     position: relative;
 }
 
+.mapLoader {
+    /*border: 1px solid #000;*/
+}
+
+.loadingSpinner {
+    background-image: url("../assets/spinner.svg");
+    background-size: contain;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+}
+
 /* Corresponde al canvas del mapa */
 .map {
     height: 600px;
     position: fixed;
     width: 430px;
+    visibility: hidden;
 }
 
 .ul_vnostyle {
@@ -57,6 +70,7 @@ body {
     border-radius: 5px;
     box-shadow: 0 3px 6px #000;
     display: none;
+    font-size: 0.9em;
 }
 
 #ic_municipios > ul li { margin: 10px 0; }
@@ -73,17 +87,22 @@ body {
     color: #fff;
     transition: background-color linear 0.1s;
     position: relative;
+    user-select: none;
 }
 
 .muniButton:hover {
     background-color: #00b36e; 
 }
 
+.consignaMainCont {
+    display: none;
+}
+
 /* Corresponde al contenedor principal de consignas. */
 .consignaCont {
     border: 1px solid #409059;
     background-color: #b7e0af;
-    padding: 10px 20px;
+    padding: 20px;
     margin-bottom: 10px;
 }
 
@@ -111,11 +130,11 @@ body {
     font-weight: bold;
     user-select: none;
     position: relative;
+    transition: background-color linear 0.1s;
 }
 
-.politica_button:after, .muniButton:after {
-    content: " ";
-    background-image: url("assets/arrow.svg");
+.downArrow {
+    background-image: url("../assets/arrow.svg");
     background-size: contain;
     height: 24px;
     width: 24px;
@@ -124,6 +143,11 @@ body {
     right: 10px;
     position: absolute;
     transform: rotate(90deg);
+    transition: transform 0.25s ease-in-out;
+}
+
+.upArrow {
+    transform: rotate(-90deg) !important;
 }
 
 .politica_button:hover {
@@ -135,6 +159,7 @@ body {
     border: 1px solid #409059;
     background-color: #b7e0af;
     padding: 10px;
+    display: none;
 }
 
 .p_ic_pName {

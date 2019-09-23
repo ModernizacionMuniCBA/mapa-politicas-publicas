@@ -49,8 +49,9 @@ function showPoliticasRespuestas(curEl) {
 
     if (toggleContainer_RespuestasPoliticas(curEl, politicaID)) return;
 
-    let provID = parseInt(curEl.parents("li").find(".muniButton").attr("data-pid"), 10);
-    let muniID = parseInt(curEl.parents("li").find(".muniButton").attr("data-id"), 10);
+    let muniButton = curEl.parents("li").find(".muniButton");
+    let provID = parseInt(muniButton.attr("data-pid"), 10);
+    let muniID = parseInt(muniButton.attr("data-id"), 10);
     let provData = getProvinciaData_byID(provID);
 
     if (provData) {
@@ -59,8 +60,6 @@ function showPoliticasRespuestas(curEl) {
         if (muniData) {
             let respData = muniData.Respuestas[0].respuestas[politicaID];
             let preguntas = _localData.preguntas;
-
-            console.log(preguntas);
 
             if (respData) {
                 let htmlCode = "<div class='p_infoCont' data-pid='" + politicaID + "'><ul class='ul_vnostyle'>";
@@ -86,31 +85,17 @@ function showPoliticasRespuestas(curEl) {
                             htmlCode += "</li>";
                         }
                     }
-                    else {
-
-                    }
                 }
 
                 htmlCode += "</ul></div>";
 
                 $(htmlCode).insertAfter(curEl);
+                curEl.next(".p_infoCont").slideDown(150);
+                curEl.children(".downArrow").addClass("upArrow");
             }
-
-            
-            /*let htmlCode = "<ul>";
-
-            for (let i = 0; i < respData.length; i++) {
-                htmlCode += "<li>" + respData[i].texto + "</li>";
-            }
-
-            htmlCode += "</ul>";*/
-
-            
-            
         }
     }
 }
-
 
 function getMunicipioData_byID(index, provData) {
     return provData.Data[index] ? provData.Data[index] : null;
@@ -136,9 +121,9 @@ function showMunicipiosData(curEl, provID, muniID) {
             let htmlCode = generateHTMLCode_MunicipiosData(muniData, provID, muniID);
 
             $(htmlCode).insertAfter(curEl);
+            curEl.next(".consignaMainCont").slideDown(150);
+            curEl.children(".downArrow").addClass("upArrow");
         }
-
-        console.log(muniData);
     }
 }
 
@@ -147,7 +132,7 @@ function generateHTMLCode_MunicipiosData(muniData, provID, muniID) {
     let htmlCode = "";
     let respData = muniData.Respuestas;
 
-    htmlCode += "<div data-pid='" + provID + "' data-id='" + muniID + "'>";
+    htmlCode += "<div class='consignaMainCont' data-pid='" + provID + "' data-id='" + muniID + "'>";
     // Recorremos todas las consignas / preguntas.
     for (let i = 0; i < preguntas.length; i++) {
         let consigna = preguntas[i];
@@ -170,7 +155,7 @@ function generateHTMLCode_MunicipiosData(muniData, provID, muniID) {
             for (let j = 0; j < respData[0].respuestas.length; j++) {
                 htmlCode += "<li><span class='politica_button' data-pid='" + j + "'>";
                 htmlCode += (j + 1) + ". " + respData[0].respuestas[j][0].texto;
-                htmlCode += "</span></li>";
+                htmlCode += "<span class='downArrow'></span></span></li>";
             }
             htmlCode += "</ul>";
         }
@@ -186,11 +171,7 @@ function generateHTMLCode_MunicipiosData(muniData, provID, muniID) {
 }
 
 function initMap() {
-    // Cargamos los poligonos del Pais
-    var countrySource = new VectorSource({
-        url: "data/polys/pais.geojson",
-        format: new GeoJSON()
-    });
+    showLoadingImage(".mapLoader");
 
     var provSource = new VectorSource({
         url: "data/polys/provincia.geojson",
@@ -203,10 +184,6 @@ function initMap() {
     var map = new ol.Map({
         target: 'map',
         layers: [
-            // Dibujamos el polígono del país.
-            new VectorLayer({
-                source: countrySource
-            }),
             // Dibujamos el polígono de las provincias.
             provLayer
         ],
@@ -277,8 +254,6 @@ function setTileStyle(provSource, map) {
                     }
                 }
             }
-
-            //console.log(curProv);
         }
     });
 }
@@ -290,21 +265,11 @@ function setTileStyle(provSource, map) {
 function registerMapEvents(map, provSource, provLayer) {
     // Registramos por UNICA VEZ (map.ONCE) el evento que se dispara cuando
     // se terminan de renderizar los tiles que se encuentran dentro del viewport.
-    map.once("rendercomplete", (event) => {
-        //console.log("MapEvent: rendercomplete");
+    map.once("rendercomplete", () => {
         setTileStyle(provSource, map, provLayer);
-        //var extent = map.getView().calculateExtent(map.getSize());
 
-        /*provSource.forEachFeatureInExtent(extent, function (feature) {
-            var features = map.getFeaturesAtPixel(event.pixel);
-            if (features) {
-                //setTileStyle(provSource, map, provLayer);
-    
-                //var properties = features[0].getProperties();
-                //features[0].setProperties(JSON.stringify("HOLA SI"), true);
-                //console.log(properties);
-            }
-        });*/
+        removeLoadingImage(".mapLoader");
+        $(".map").css("visibility", "visible");
     });
 
     // Registramos eventos de movimiento de puntero sobre el mapa.
@@ -314,7 +279,7 @@ function registerMapEvents(map, provSource, provLayer) {
 
         displayTooltipInfo(map, map.getEventPixel(evt.originalEvent));
     });
-
+    
     map.on("click", function(evt) {
         onTileClick_Handler(map, evt);
     });
@@ -325,9 +290,6 @@ function onTileClick_Handler(map, evt) {
     if (!features) return;
 
     let curFeature = features[0];
-    
-    console.log(features);
-
     let curProv = getProvinciaData_byName(curFeature.values_.NAM);
     updateDisplay_municipios(curProv);
 }
@@ -341,6 +303,7 @@ function displayTooltipInfo(map, pixel) {
 
     if (curFeature) {
         let curData = curFeature.values_;
+        console.log(curData);
         _tooltipDlg.html(curData.NAM);
         // Acomodamos la ubicación del tooltip.
         _tooltipDlg.css({"left": xPos, "top": yPos}).fadeIn(150);
@@ -379,50 +342,6 @@ function displayTileInfo(map, pixel) {
     else _tooltipDlg.hide();
 }
 
-
-/**
- * Muestra todas las consignas, preguntas y respuestas de un municipio.
- * @param {*} curEl Elemento HTML que corresponde al boton del municipio.
- */
-function displayConsignas(curEl) {
-    let preguntas = _localData.preguntas;
-
-    //let htmlCode = "<div class='ic_consignas'>";
-    let htmlCode = "";
-
-    // recorremos todas las consignas
-    for (let i = 0; i < preguntas.length; i++) {
-        let consigna = preguntas[i];
-        htmlCode += "<div class='consignaCont' data-cid='" + i + "'>";
-        htmlCode += "<h2>Consigna nº" + (i + 1) + "</h2>";
-        let consignaDesc = consigna.consigna;
-
-        htmlCode += "<p>" + consignaDesc + "</p>";
-
-        if (consigna.pregunta) {
-
-            htmlCode += "<ul>"
-            // recorremos las preguntas
-            /*for (let j = 0; j < consigna.pregunta.length; j++) {
-                let curPreg = consigna.pregunta[j];
-                
-                htmlCode += "<li data-prid='" + curPreg.pregID + "'><span>" + curPreg.nombre + "</span></li>";
-            }*/
-
-
-
-            htmlCode += "</ul>";
-        }
-        htmlCode += "</div>";
-    }
-
-    /*htmlCode += "</div>"
-
-    _infoDlg.html(htmlCode);*/
-    //_municipiosDlg.html(htmlCode);
-    $(htmlCode).insertAfter(curEl);
-}
-
 function getProvinciaData_byName(provName) {
     let provData = null;
 
@@ -455,7 +374,8 @@ function updateDisplay_municipios(provData) {
         let municipio = curData[i];
 
         if (municipio) {
-            htmlCode += "<li><span class='muniButton' data-pid='" + provData.Index + "' data-id='" + i + "'>" + municipio.Municipio + ", " + municipio.Direccion + "</span></li>";
+            htmlCode += "<li><span class='muniButton' data-pid='" + provData.Index + "' data-id='" + i + "'>" + municipio.Municipio + ", " + municipio.Direccion;
+            htmlCode += "<span class='downArrow'></span></span></li>";
         }
     }
 
@@ -472,20 +392,26 @@ function toggleContainer_RespuestasPoliticas(senderEl, politicaID) {
     // representa el contenedor de respuestas
     let respContainer = senderEl.parent("li").find("div[data-pid='" + politicaID + "']");
     
-    return toggleContainerVisibility(respContainer);
+    return toggleContainerVisibility(respContainer, senderEl);
 }
 
 function toggleContainer_RespuestasMunicipios(senderEl, provID, muniID) {
     let respContainer = senderEl.parent("li").find("div[data-pid='" + provID + "'][data-id='" + muniID + "']");
 
-    return toggleContainerVisibility(respContainer);
+    return toggleContainerVisibility(respContainer, senderEl);
 }
 
-function toggleContainerVisibility(element) {
+function toggleContainerVisibility(element, senderEl) {
     // el contenedor existe
     if (element.length != 0) {
-        if (element.is(":visible")) element.fadeOut(150);
-        else element.fadeIn(150);
+        if (element.is(":visible")) {
+            element.slideUp(150);
+            senderEl.children(".downArrow").removeClass("upArrow");
+        }
+        else {
+            element.slideDown(150);
+            senderEl.children(".downArrow").addClass("upArrow");
+        }
         return true;
     }
     return false;
@@ -493,4 +419,12 @@ function toggleContainerVisibility(element) {
 
 function changeCursorOnMapHover(map, evt) {
     map.getTargetElement().style.cursor = map.hasFeatureAtPixel(map.getEventPixel(evt.originalEvent)) ? 'pointer' : '';
+}
+
+function showLoadingImage(elementName) {
+    $(elementName).html("<div class='loadingSpinner'></div>");
+}
+
+function removeLoadingImage(elementName) {
+    $(elementName).find(".loadingSpinner").remove();
 }
