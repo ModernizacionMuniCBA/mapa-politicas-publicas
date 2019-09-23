@@ -1,3 +1,7 @@
+html {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
 body {
     margin: 0;
 }
@@ -8,6 +12,7 @@ body {
     background-color: #009059;
     padding: 10px;
     color: #fff;
+    font-size: 1.5em;
 }
 
 #mainCont {
@@ -67,6 +72,7 @@ body {
     cursor: pointer;
     color: #fff;
     transition: background-color linear 0.1s;
+    position: relative;
 }
 
 .muniButton:hover {
@@ -104,6 +110,20 @@ body {
     color: #fff;
     font-weight: bold;
     user-select: none;
+    position: relative;
+}
+
+.politica_button:after, .muniButton:after {
+    content: " ";
+    background-image: url("/assets/arrow.svg");
+    background-size: contain;
+    height: 24px;
+    width: 24px;
+    color: #fff;
+    display: inline-block;
+    right: 10px;
+    position: absolute;
+    transform: rotate(90deg);
 }
 
 .politica_button:hover {
