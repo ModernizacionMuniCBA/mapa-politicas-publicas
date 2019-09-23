@@ -294,19 +294,25 @@ function onTileClick_Handler(map, evt) {
     updateDisplay_municipios(curProv);
 }
 
-function displayTooltipInfo(map, pixel) {
+function displayTooltipInfo(map, pixel) { 
     let xPos = pixel[0] + "px";
-    let yPos = (pixel[1] - 25) + "px";
+    let yPos = (pixel[1] - 25);
     let curFeature = map.forEachFeatureAtPixel(pixel, function(feature) {
         return feature;
     });
 
+    let mapDivOffset = $(window);
+
     if (curFeature) {
         let curData = curFeature.values_;
-        console.log(curData);
+        //console.log(curData);
         _tooltipDlg.html(curData.NAM);
+
+        yPos += mapDivOffset.scrollTop();
+        yPos += "px";
+
         // Acomodamos la ubicación del tooltip.
-        _tooltipDlg.css({"left": xPos, "top": yPos}).fadeIn(150);
+        _tooltipDlg.css({"left": xPos, "top": yPos}).fadeIn(200);
     }
     else _tooltipDlg.hide();
 }
