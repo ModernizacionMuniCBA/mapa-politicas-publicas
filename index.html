@@ -6,13 +6,16 @@
         <link rel="stylesheet" href="style/main.css?v=0.1" type="text/css">
         <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
         <script src="scripts/jquery-3.4.1.min.js"></script>
-        <script src="scripts/main.js?v=0.1"></script>
+        <script src="scripts/main.js?v=0.2"></script>
         <title>Políticas Públicas - Transparencia y Acceso a la información</title>
     </head>
     <body>
         <h1 class='title'>Mapa de políticas públicas de transparencia y acceso a la información.</h1>
         <div id="mainCont">
-            <div id="mapCont"><div id="map" class="map"></div></div>
+            <div id="mapCont">
+                <div class="mapLoader"></div>
+                <div id="map" class="map"></div>
+            </div>
             <div id="infoCont">
                 <div id="ic_municipios">
                     <p>
