@@ -294,7 +294,7 @@ function onTileClick_Handler(map, evt) {
     updateDisplay_municipios(curProv);
 }
 
-function displayTooltipInfo(map, pixel) {
+function displayTooltipInfo(map, pixel) { 
     let xPos = pixel[0] + "px";
     let yPos = (pixel[1] - 25);
     let curFeature = map.forEachFeatureAtPixel(pixel, function(feature) {
