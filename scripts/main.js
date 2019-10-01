@@ -380,7 +380,7 @@ function updateDisplay_municipios(provData) {
         let municipio = curData[i];
 
         if (municipio) {
-            htmlCode += "<li><span class='muniButton' data-pid='" + provData.Index + "' data-id='" + i + "'>" + municipio.Municipio + ", " + municipio.Direccion;
+            htmlCode += "<li><span class='muniButton' data-pid='" + provData.Index + "' data-id='" + i + "'>" + municipio.Municipio + municipio.Direccion;
             htmlCode += "<span class='downArrow'></span></span></li>";
         }
     }
