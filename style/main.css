@@ -166,8 +166,12 @@ body {
     margin: 0 0 10px;
     font-weight: bold;
     font-size: 1.1em;
+    font-style: italic;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #9bc592;
 }
 
 .p_ic_pTxt {
     font-size: 0.9em;
+    margin: 15px 0;
 }

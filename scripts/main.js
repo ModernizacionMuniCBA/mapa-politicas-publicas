@@ -30,7 +30,7 @@ $(document).ready(function() {
 
     loadData();
 
-    // Click sobre el boton de municipios.
+    // Evento de click sobre el boton de municipios.
     _municipiosDlg.on("click", ".muniButton", function() {
         let curEl = $(this);
         let provID = parseInt(curEl.attr("data-pid"), 10);
@@ -44,6 +44,10 @@ $(document).ready(function() {
 
 });
 
+/**
+ * Muestra la información de las distintas políticas aplicadas.
+ * @param curEl Elemento clickeado.
+ */
 function showPoliticasRespuestas(curEl) {
     let politicaID = parseInt(curEl.attr("data-pid"), 10);
 
@@ -67,9 +71,10 @@ function showPoliticasRespuestas(curEl) {
                 
                 for (let i = 0; i < preguntas.length; i++) {
                     let curPregunta = preguntas[i];
-                    // Verificamos que la pregunta corresponda a la consigna 0.
-                    if (curPregunta.consigID === 0) {
-                        let preguntas = curPregunta.pregunta;
+                    
+                    // Verificamos si la pregunta actual tiene sub items.
+                    if (curPregunta.subItems) {
+                        let preguntas = curPregunta.subItems;
 
                         // recorremos todas las preguntas de la consigna actual
                         for (let j = 0; j < preguntas.length; j++) {
@@ -78,7 +83,6 @@ function showPoliticasRespuestas(curEl) {
                             
                             // recorremos las respuestas de la pregunta actual.
                             for (let k = 0; k < respData.length; k++) {
-                                //htmlCode += "<span>" + preguntas[j].nombre + "</span>";
                                 if (respData[k].pregID === j) htmlCode += "<div class='p_ic_pTxt'>" + respData[k].texto + "</div>";
                             }
 
@@ -97,6 +101,12 @@ function showPoliticasRespuestas(curEl) {
     }
 }
 
+/**
+ * Obtiene la información de un municipio.
+ * @param index ID del municipio. El ID corresponde al índice del municipio
+ * dentro del array.
+ * @param provData Array con toda la información de las provincias.
+ */
 function getMunicipioData_byID(index, provData) {
     return provData.Data[index] ? provData.Data[index] : null;
 }
@@ -127,6 +137,12 @@ function showMunicipiosData(curEl, provID, muniID) {
     }
 }
 
+/**
+ * Genera el código HTML con las consignas perteneciente al municipio seleccionado.
+ * @param {*} muniData Información del municipio.
+ * @param {*} provID ID de la provincia a la que pertenece el municipio.
+ * @param {*} muniID ID del municipio.
+ */
 function generateHTMLCode_MunicipiosData(muniData, provID, muniID) {
     let preguntas = _localData.preguntas;
     let htmlCode = "";
@@ -148,13 +164,13 @@ function generateHTMLCode_MunicipiosData(muniData, provID, muniID) {
         // sub-items, por lo que debemos representarla de manera diferenciada.
         // De momento está hard-coded pero en un futuro puede implementarse
         // una propiedad en "data.json" para diferenciar consignas con sub-consignas.
-        if (i === 0) {
+        if (consigna.subItems) {
             htmlCode += "<p>" + consignaDesc + "</p>";
             htmlCode += "<ul class='politicasList'>";
             // recorremos todas las respuestas del municipio.
-            for (let j = 0; j < respData[0].respuestas.length; j++) {
+            for (let j = 0; j < respData[i].respuestas.length; j++) {
                 htmlCode += "<li><span class='politica_button' data-pid='" + j + "'>";
-                htmlCode += (j + 1) + ". " + respData[0].respuestas[j][0].texto;
+                htmlCode += (j + 1) + ". " + respData[i].respuestas[j][0].texto;
                 htmlCode += "<span class='downArrow'></span></span></li>";
             }
             htmlCode += "</ul>";
@@ -170,9 +186,13 @@ function generateHTMLCode_MunicipiosData(muniData, provID, muniID) {
     return htmlCode;
 }
 
+/**
+ * Inicializa el mapa, dibujando los polígonos/tiles y registrando eventos.
+ */
 function initMap() {
     showLoadingImage(".mapLoader");
 
+    // Cargamos los polígonos de las provincias.
     var provSource = new VectorSource({
         url: "data/polys/provincia.geojson",
         format: new GeoJSON()
@@ -211,13 +231,13 @@ function initContainers() {
 }
 
 /**
- * Carga el JSON con la información de las provincias y municipios.
+ * Carga el JSON que contiene la información de las provincias y municipios.
  */
 function loadData() {
     $.getJSON("./data/data.json", function(json) {
-        if (json) {
-            _localData = json; 
-        }
+        if (json) _localData = json;
+
+        console.log(_localData);
     });
 }
 
@@ -368,6 +388,11 @@ function getProvinciaData_byName(provName) {
     return provData;
 }
 
+/**
+ * Obtiene la información de una provincia según su ID.
+ * @param provID ID de la provincia. El ID corresponde al índice de la provincia
+ * dentro del array.
+ */
 function getProvinciaData_byID(provID) {
     return _localData.provincias[provID] ? _localData.provincias[provID] : null;
 }
@@ -390,6 +415,12 @@ function updateDisplay_municipios(provData) {
     _municipiosDlg.html(htmlCode);
 }
 
+/**
+ * Muestra/oculta los contenedores con las respuestas de las políticas aplicadas por
+ * municipios.
+ * @param {*} senderEl Elemento disparador del evento.
+ * @param {*} politicaID ID de la política a mostrar.
+ */
 function toggleContainer_RespuestasPoliticas(senderEl, politicaID) {
     // si existe un elemento <div> con el atributo "data-pid" entendemos
     // que los datos ya se anexaron al DOM, por lo tanto en lugar de volver a anexar
