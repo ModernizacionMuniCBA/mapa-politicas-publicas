@@ -8,6 +8,8 @@ var _infoDlg = null;
 /** Representa el contenedor con las preguntas correspondiente al municipio. */
 var _municipiosDlg = null;
 
+var _map = null;
+
 /* == Imports de OpenLayer == */
 var Feature = ol.Feature;
 var Map = ol.Map;
@@ -21,6 +23,7 @@ var {Circle2, Fill, Stroke, Style} = ol.style;
 var CircleStyle = Circle2;
 var {OSM} = ol.source;
 var VectorSource = ol.source.Vector;
+var Control = ol.control;
 /* ========================== */
 
 $(document).ready(function() {
@@ -201,7 +204,7 @@ function initMap() {
     var provLayer = new VectorLayer({ source: provSource });
 
     // creamos una nueva instancia del mapa.
-    var map = new ol.Map({
+    _map = new ol.Map({
         target: 'map',
         layers: [
             // Dibujamos el polígono de las provincias.
@@ -213,7 +216,7 @@ function initMap() {
         })
     });
 
-    registerMapEvents(map, provSource, provLayer);
+    registerMapEvents(_map, provSource, provLayer);
 }
 
 /**
@@ -397,22 +400,52 @@ function getProvinciaData_byID(provID) {
     return _localData.provincias[provID] ? _localData.provincias[provID] : null;
 }
 
+var _pointsVectorSource = null;
 function updateDisplay_municipios(provData) {
     let htmlCode = "<ul class='ul_vnostyle'>";
     let curData = provData.Data.Data;
+    let markers = [];
+
+    if (_pointsVectorSource) _pointsVectorSource.clear();
 
     for (let i = 0; i < curData.length; i++) {
         let municipio = curData[i];
 
         if (municipio) {
-            htmlCode += "<li><span class='muniButton' data-pid='" + provData.Index + "' data-id='" + i + "'>" + municipio.Municipio + municipio.Direccion;
-            htmlCode += "<span class='downArrow'></span></span></li>";
+            htmlCode += "<li>";
+            htmlCode += "<div class='muniButton' data-pid='" + provData.Index + "' data-id='" + i + "'>";
+            htmlCode += "<span class='muniName'>" + municipio.Organismo + " - " + municipio.Municipio + "</span>";
+            htmlCode += "<span class='muniDir'>" + municipio.Direccion + "</span>";
+            htmlCode += "<span class='downArrow'></span></div>";
+            htmlCode += "</li>";
+
+            let marker = new ol.Feature({
+                geometry: new ol.geom.Point(
+                    ol.proj.fromLonLat([municipio.Long, municipio.Lat])
+                ),
+            });
+
+            marker.on("pointermove", function(evt) {
+                if (evt.dragging) return;
+                changeCursorOnMapHover(_map, evt);
+        
+                //displayTooltipInfo(_map, _map.getEventPixel(evt.originalEvent));
+                console.log("hola");
+            });
+
+            markers.push(marker);
         }
     }
 
     htmlCode += "</ul>";
 
     _municipiosDlg.html(htmlCode);
+    
+    _pointsVectorSource = new ol.source.Vector({ features: markers });
+    let markerVectorLayer = new ol.layer.Vector({
+        source: _pointsVectorSource,
+    });
+    _map.addLayer(markerVectorLayer);
 }
 
 /**
@@ -433,7 +466,7 @@ function toggleContainer_RespuestasPoliticas(senderEl, politicaID) {
 }
 
 function toggleContainer_RespuestasMunicipios(senderEl, provID, muniID) {
-    let respContainer = senderEl.parent("li").find("div[data-pid='" + provID + "'][data-id='" + muniID + "']");
+    let respContainer = senderEl.parent("li").find("div.consignaMainCont[data-pid='" + provID + "'][data-id='" + muniID + "']");
 
     return toggleContainerVisibility(respContainer, senderEl);
 }

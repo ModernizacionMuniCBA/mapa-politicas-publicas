@@ -80,7 +80,6 @@ body {
 .muniButton {
     border: 1px solid #409059;
     background-color: #009059;
-    display: block;
     padding: 10px;
     margin: 10px 0 0;
     cursor: pointer;
@@ -92,6 +91,16 @@ body {
 
 .muniButton:hover {
     background-color: #00b36e; 
+}
+
+.muniName {
+    display: block;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.muniDir {
+    font-size: 0.8em;
 }
 
 .consignaMainCont {
