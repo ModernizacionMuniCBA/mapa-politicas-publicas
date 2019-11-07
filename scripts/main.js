@@ -122,20 +122,19 @@ function getMunicipioData_byID(index, provData) {
  */
 function showMunicipiosData(curEl, provID, muniID) {
     let provData = getProvinciaData_byID(provID)
+    let muniData = getMunicipioData_byID(muniID, provData);
 
-    if (toggleContainer_RespuestasMunicipios(curEl, provID, muniID)) return;
+    if (!toggleContainer_RespuestasMunicipios(curEl, provID, muniID)) {
+        // Nos aseguramos que haya información para la provincia seleccionada.
+        if (provData) {
+            // Obtenemos información del municipio seleccionado.
+            if (muniData) {
+                let htmlCode = generateHTMLCode_MunicipiosData(muniData, provID, muniID);
 
-    // Nos aseguramos que haya información para la provincia seleccionada.
-    if (provData) {
-        // Obtenemos información del municipio seleccionado.
-        let muniData = getMunicipioData_byID(muniID, provData);
-        
-        if (muniData) {
-            let htmlCode = generateHTMLCode_MunicipiosData(muniData, provID, muniID);
-
-            $(htmlCode).insertAfter(curEl);
-            curEl.next(".consignaMainCont").slideDown(150);
-            curEl.children(".downArrow").addClass("upArrow");
+                $(htmlCode).insertAfter(curEl);
+                curEl.next(".consignaMainCont").slideDown(150);
+                curEl.children(".downArrow").addClass("upArrow");
+            }
         }
     }
 }
@@ -207,7 +206,9 @@ function initMap() {
     _map = new ol.Map({
         target: 'map',
         layers: [
-            // Dibujamos el polígono de las provincias.
+            new ol.layer.Tile({
+                source: new ol.source.OSM()
+            }),
             provLayer
         ],
         view: new ol.View({
@@ -239,8 +240,6 @@ function initContainers() {
 function loadData() {
     $.getJSON("./data/data.json", function(json) {
         if (json) _localData = json;
-
-        console.log(_localData);
     });
 }
 
@@ -302,19 +301,46 @@ function registerMapEvents(map, provSource, provLayer) {
 
         displayTooltipInfo(map, map.getEventPixel(evt.originalEvent));
     });
+
+    // Ocultamos el tooltip cuando el mouse sale de la vista del mapa.
+    map.getViewport().addEventListener("mouseout", function(event) {
+        _tooltipDlg.hide().html("");
+    }, false);
     
     map.on("click", function(evt) {
         onTileClick_Handler(map, evt);
     });
 }
 
+var _lastFeature, _lastStyle;
 function onTileClick_Handler(map, evt) {
     let features = map.getFeaturesAtPixel(evt.pixel);
     if (!features) return;
 
     let curFeature = features[0];
     let curProv = getProvinciaData_byName(curFeature.values_.NAM);
+    if (!curProv) return;
     updateDisplay_municipios(curProv);
+
+    if (_lastFeature) {
+        _lastFeature.setStyle(_lastStyle);
+    }
+
+    _lastFeature = curFeature;
+    _lastStyle = _lastFeature.getStyle();
+
+    curFeature.setStyle(new Style({
+        stroke: new Stroke({
+            color: "rgba(200,20,20,0.8)",
+            width: 2
+        }),
+        fill: new Fill({
+            color: "rgba(20,20,250,0.2)"
+        })
+    }));
+    
+    let fitOptions = { duration: 750 };
+    map.getView().fit(curFeature.getGeometry(), fitOptions);
 }
 
 function displayTooltipInfo(map, pixel) { 
@@ -328,7 +354,6 @@ function displayTooltipInfo(map, pixel) {
 
     if (curFeature) {
         let curData = curFeature.values_;
-        //console.log(curData);
         _tooltipDlg.html(curData.NAM);
 
         yPos += mapDivOffset.scrollTop();
@@ -430,7 +455,6 @@ function updateDisplay_municipios(provData) {
                 changeCursorOnMapHover(_map, evt);
         
                 //displayTooltipInfo(_map, _map.getEventPixel(evt.originalEvent));
-                console.log("hola");
             });
 
             markers.push(marker);
