@@ -1,6 +1,6 @@
 /// <reference path="jquery-3.4.1.min.js" />
 
-var _localData;
+var _localData = {};
 /** Representa al contenedor de tooltip. */
 var _tooltipDlg = null;
 /** Representa el contenedor con información sobre cada una de las prov / municipios. */
@@ -29,9 +29,9 @@ var Control = ol.control;
 $(document).ready(function() {
     initContainers();
     
-    initMap();
-
-    loadData();
+    initMap().then(() => {
+        loadData();
+    });
 
     // Evento de click sobre el boton de municipios.
     _municipiosDlg.on("click", ".muniButton", function() {
@@ -76,7 +76,7 @@ function showPoliticasRespuestas(curEl) {
                     let curPregunta = preguntas[i];
                     
                     // Verificamos si la pregunta actual tiene sub items.
-                    if (curPregunta.subItems) {
+                    if (curPregunta.subItems && curPregunta.subItems.length > 0) {
                         let preguntas = curPregunta.subItems;
 
                         // recorremos todas las preguntas de la consigna actual
@@ -166,7 +166,7 @@ function generateHTMLCode_MunicipiosData(muniData, provID, muniID) {
         // sub-items, por lo que debemos representarla de manera diferenciada.
         // De momento está hard-coded pero en un futuro puede implementarse
         // una propiedad en "data.json" para diferenciar consignas con sub-consignas.
-        if (consigna.subItems) {
+        if (consigna.subItems && consigna.subItems.length > 0) {
             htmlCode += "<p>" + consignaDesc + "</p>";
             htmlCode += "<ul class='politicasList'>";
             // recorremos todas las respuestas del municipio.
@@ -192,32 +192,36 @@ function generateHTMLCode_MunicipiosData(muniData, provID, muniID) {
  * Inicializa el mapa, dibujando los polígonos/tiles y registrando eventos.
  */
 function initMap() {
-    showLoadingImage(".mapLoader");
+    return new Promise((resolve) => {
+        showLoadingImage(".mapLoader");
 
-    // Cargamos los polígonos de las provincias.
-    var provSource = new VectorSource({
-        url: "data/polys/provincia.geojson",
-        format: new GeoJSON()
-    });
+        // Cargamos los polígonos de las provincias.
+        var provSource = new VectorSource({
+            url: "data/polys/provincia.geojson",
+            format: new GeoJSON()
+        });
+    
+        var provLayer = new VectorLayer({ source: provSource });
+    
+        // creamos una nueva instancia del mapa.
+        _map = new ol.Map({
+            target: 'map',
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                }),
+                provLayer
+            ],
+            view: new ol.View({
+                center: ol.proj.transform([-62.4201,-40.1888], 'EPSG:4326', 'EPSG:3857'),
+                zoom: 4
+            })
+        });
+    
+        registerMapEvents(_map, provSource, provLayer);
 
-    var provLayer = new VectorLayer({ source: provSource });
-
-    // creamos una nueva instancia del mapa.
-    _map = new ol.Map({
-        target: 'map',
-        layers: [
-            new ol.layer.Tile({
-                source: new ol.source.OSM()
-            }),
-            provLayer
-        ],
-        view: new ol.View({
-            center: ol.proj.transform([-62.4201,-40.1888], 'EPSG:4326', 'EPSG:3857'),
-            zoom: 4
-        })
-    });
-
-    registerMapEvents(_map, provSource, provLayer);
+        resolve(true);
+    }); 
 }
 
 /**
@@ -238,9 +242,195 @@ function initContainers() {
  * Carga el JSON que contiene la información de las provincias y municipios.
  */
 function loadData() {
-    $.getJSON("./data/data.json", function(json) {
-        if (json) _localData = json;
+    return new Promise((resolve) => {
+        $.getJSON("https://sheets.googleapis.com/v4/spreadsheets/1gLZfwYttqEjTo3yx8roLuqZ2sdy4i3pJHf-THumxEfc/values/Sheet1/?key=AIzaSyDqLkekaIpLvWsKArSRrj9kCka3pCx1RmA", function(json) {
+            console.log(json);
+            resolve(parseData(json));
+        });
     });
+}
+
+var _parsedJson = {};
+function parseData(json) {
+    let results = json.values;
+    let provincias = [];
+
+    // Recorremos todos los resultados
+    for (let i = 0; i < results.length; i++) {
+        // Añadimos las preguntas a la lista.
+        if (i == 0) {
+            parsePreguntas(results[i]);
+        }
+        else {          
+            // Añadimos las respuestas.
+            let respuesta = results[i];
+            let tmpData = {};
+            let latitud = respuesta[0];
+            let longitud = respuesta[1];
+            let email = respuesta[3];
+            let organismo = respuesta[4];
+            let calle = respuesta[6];
+            let altura = respuesta[7];
+            let provinciaName = respuesta[8];
+            let ciudad = respuesta[9];
+
+            tmpData = {
+                NAM: provinciaName,
+                Data: []
+            };
+
+            let curProv = getProvincia_ByNAM(provincias, provinciaName);
+            
+            // La provincia no fue añadida con anterioridad
+            if (!curProv) {
+                // Añadimos la respuesta a la lista de respuestas
+                tmpData.Data.push({
+                    Municipio: organismo,
+                    Organismo: organismo,
+                    Jurisdiccion: "",
+                    Direccion: calle + ", " + altura + ", " + provinciaName,
+                    Lat: latitud,
+                    Long: longitud,
+                    Respuestas: []
+                });
+                
+                // Asignamos los datos de tmpData a curProv para poder manipular la información
+                // mas adelante.
+                curProv = tmpData;
+
+                // Añadimos la provincia a la lista
+                provincias.push(tmpData);
+            }
+            else {
+                // Si la provincia existe, debemos añadir la información a la lista de data
+                // de la provincia.
+                curProv.Data.push({
+                    NAM: provinciaName,
+                    Data: {
+                        Municipio: organismo,
+                        Organismo: organismo,
+                        Jurisdiccion: "",
+                        Direccion: calle + ", " + altura + ", " + provinciaName,
+                        Lat: latitud,
+                        Long: longitud,
+                        Respuestas: []
+                    }
+                });
+            }
+
+            // Recorremos todas las respuestas
+            for (let j = 10; j < respuesta.length; j++) {
+                // Para saber a dónde corresponde la respuesta, comprobaremos el nivel en el que
+                // nos encontramos.
+                let niveles = results[0][j].split(".");
+                let nivelesTotales = 0;
+                let respText = results[i][j];
+                let respData = {};
+                
+                // Recorremos los niveles
+                for (let nivelIndex = 0; nivelIndex < niveles.length; nivelIndex++) {
+                    let curLevel = niveles[nivelIndex];
+        
+                    if ($.isNumeric(curLevel) === true) {
+                        nivelesTotales++;
+                    }
+                }
+
+                // Las consignas siempre son representadas por un nivel superior.
+                if (nivelesTotales === 1) {
+                    respData.consigID = parseInt(niveles[0] - 1, 10);
+                    respData.respConsigna = respText;
+                    respData.respuestas = [];
+
+                    // Añadimos la consigna
+                    if (!curProv.Data[0].Respuestas[respData.consigID]) curProv.Data[0].Respuestas[respData.consigID] = respData;
+                    
+                    //curProv.Data[0].Respuestas[respData.consigID] = respData;
+                }
+                else {
+                    let consigID = parseInt(niveles[0] - 1, 10);
+                    let respNivel = parseInt(niveles[1] - 1, 10);
+                    let auxData = curProv.Data[0].Respuestas[consigID];
+
+                    if (!auxData.respuestas[respNivel]) {
+                        auxData.respuestas[respNivel] = [];
+                    }
+
+                    auxData.respuestas[respNivel].push({
+                        pregID: niveles[2] - 1,
+                        texto: respText
+                    });
+                }
+            }
+        }
+    }
+
+    _localData.provincias = provincias;
+}
+
+function getProvincia_ByNAM(provList, provNam) {
+    for (let i = 0; i < provList.length; i++) {
+        if (provList[i].NAM === provNam) return provList[i];
+    }
+}
+
+function parsePreguntas(results) {
+    let preguntasList = results;
+    let tmpPregs = [];
+
+    // las listas de preguntas comienzan a partir de la posición 10.
+    // Modificar el índice en caso que el formato de la planilla cambie.
+    for (let j = 10; j < preguntasList.length; j++) {
+        let pregunta = preguntasList[j];
+        let niveles = pregunta.split(".");
+        let nivelesTotales = 0;
+        let tmpPreg = {};
+        
+        // Recorremos los niveles
+        for (let nivelIndex = 0; nivelIndex < niveles.length; nivelIndex++) {
+            let curLevel = niveles[nivelIndex];
+
+            if ($.isNumeric(curLevel) === true) {
+                nivelesTotales++;
+            }
+        }
+
+        if (nivelesTotales === 0) continue;
+
+        // Las consignas siempre son representadas por un nivel superior.
+        if (nivelesTotales === 1) {
+            tmpPreg.consigna = pregunta;
+            tmpPreg.consigID = parseInt(niveles[0] - 1, 10);
+            tmpPreg.subItems = [];
+
+            // Añadimos la consigna
+            tmpPregs.push(tmpPreg);
+        }
+        else {
+            // Sólo se deben añadir las subconsignas una única vez. Para conseguir eso, verificaremos
+            // que el segundo subnivel sea siempre el 1.
+            if (parseInt(niveles[1], 10) !== 1) continue;
+            // Si hay subniveles, debemos añadir las preguntas a la consigna correspondiente.
+            let consigID = parseInt(niveles[0] - 1, 10);  // ID de la consigna.
+            let curConsigna = getConsigna_ByID(tmpPregs, consigID);
+
+            let preguntaText = niveles[nivelesTotales];
+
+            curConsigna.subItems.push({
+                nombre: preguntaText,
+                pregID: curConsigna.subItems.length
+            });
+            
+        }
+    }
+
+    _localData.preguntas = tmpPregs;
+}
+
+function getConsigna_ByID(consignas, consignaID) {
+    for (let i = 0; i < consignas.length; i++) {
+        if (consignas[i].consigID === consignaID) return consignas[i];
+    }
 }
 
 /**
